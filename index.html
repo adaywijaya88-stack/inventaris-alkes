@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventaris & Pengecekan Alat - RSUD Kepulauan Seribu</title>
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- HTML5 QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="bg-gray-100 font-sans flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR NAVIGASI -->
+  <aside class="w-64 bg-slate-900 text-white flex flex-col shrink-0 border-r border-slate-800">
+    <div class="p-5 flex items-center space-x-3 border-b border-slate-800">
+      <div class="bg-blue-600 p-2 rounded-lg">
+        <i class="fa-solid fa-hospital text-white text-xl"></i>
+      </div>
+      <div>
+        <span class="font-bold text-lg tracking-wide block">Inventaris Alat</span>
+        <span class="text-xs text-blue-400 font-semibold block">RSUD Kepulauan Seribu</span>
+      </div>
+    </div>
+    
+    <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+      <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-blue-600 text-white font-medium shadow-md transition">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Dashboard</span>
+      </button>
+
+      <button onclick="switchTab('daftar')" id="btn-daftar" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition">
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+        <span>Daftar Alat</span>
+      </button>
+
+      <button onclick="switchTab('pengecekan')" id="btn-pengecekan" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition">
+        <i class="fa-solid fa-clipboard-check"></i>
+        <span>Pengecekan Alat</span>
+      </button>
+
+      <button onclick="switchTab('serahterima')" id="btn-serahterima" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition">
+        <i class="fa-solid fa-file-signature"></i>
+        <span>Serah Terima</span>
+      </button>
+
+      <!-- TOMBOL SCAN BARCODE/QR CODE TERHUBUNG KE MODAL KAMERA -->
+      <button onclick="openScanModal()" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition">
+        <i class="fa-solid fa-camera"></i>
+        <span>Scan QR Code</span>
+      </button>
+    </nav>
+
+    <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+      RSUD Kepulauan Seribu &copy; 2026
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 flex flex-col overflow-y-auto">
+    
+    <!-- HEADER -->
+    <header class="bg-blue-600 p-6 shadow-md border-b border-blue-700 flex justify-between items-center sticky top-0 z-10 text-white">
+      <div>
+        <h1 id="page-title" class="text-2xl font-bold text-white">Dashboard Utama</h1>
+        <p id="page-subtitle" class="text-blue-100 text-sm">Overview status dan statistik inventaris alat RSUD Kepulauan Seribu</p>
+      </div>
+      <button id="btn-header-action" onclick="openModal()" class="hidden bg-white hover:bg-slate-100 text-blue-600 font-semibold px-5 py-2.5 rounded-xl shadow transition flex items-center space-x-2">
+        <i class="fa-solid fa-plus"></i>
+        <span>Tambah Alat</span>
+      </button>
+    </header>
+
+    <div class="p-6 space-y-6 flex-1">
+      
+      <!-- ================= SECTION DASHBOARD ================= -->
+      <div id="section-dashboard" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold uppercase text-slate-400 tracking-wider">Total Alat</p>
+              <h3 id="dash-total" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
+              <p class="text-xs text-emerald-600 mt-1"><i class="fa-solid fa-arrow-up"></i> Terdata di sistem</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold uppercase text-slate-400 tracking-wider">Status Aktif</p>
+              <h3 id="dash-aktif" class="text-3xl font-extrabold text-emerald-600 mt-1">0</h3>
+              <p class="text-xs text-slate-400 mt-1">Siap digunakan</p>
+            </div>
+            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold uppercase text-slate-400 tracking-wider">Kondisi Baik</p>
+              <h3 id="dash-baik" class="text-3xl font-extrabold text-blue-600 mt-1">0</h3>
+              <p class="text-xs text-slate-400 mt-1">Tanpa kendala</p>
+            </div>
+            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold uppercase text-slate-400 tracking-wider">Pengecekan Tercatat</p>
+              <h3 id="dash-cek-count" class="text-3xl font-extrabold text-amber-500 mt-1">0</h3>
+              <p class="text-xs text-slate-400 mt-1">Inspeksi fisik</p>
+            </div>
+            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h4 class="font-bold text-slate-800 mb-4 flex items-center space-x-2">
+              <i class="fa-solid fa-chart-column text-blue-600"></i>
+              <span>Ringkasan Kondisi Alat</span>
+            </h4>
+            <div class="h-64"><canvas id="kondisiChart"></canvas></div>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h4 class="font-bold text-slate-800 mb-4 flex items-center space-x-2">
+              <i class="fa-solid fa-chart-pie text-blue-600"></i>
+              <span>Proporsi Status Alat</span>
+            </h4>
+            <div class="h-64 flex items-center justify-center"><canvas id="statusChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SECTION DAFTAR ALAT ================= -->
+      <div id="section-daftar" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="bg-slate-800 p-4 flex flex-wrap justify-between items-center gap-3 text-white">
+            <div class="flex items-center space-x-2 font-semibold">
+              <i class="fa-solid fa-database text-amber-400"></i>
+              <span>Data Alat Tersimpan - RSUD Kepulauan Seribu</span>
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="copyTableText('inventory')" class="bg-white text-slate-700 hover:bg-slate-100 font-medium px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1">
+                <i class="fa-regular fa-copy"></i>
+                <span>Salin Teks</span>
+              </button>
+              <button onclick="exportToCSV('inventory')" class="bg-amber-500 hover:bg-amber-600 text-white font-medium px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Ekspor CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 border-b bg-slate-50 flex items-center justify-between">
+            <div class="relative w-80">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+              <input type="text" id="searchInput" onkeyup="filterData('inventoryTable', this.value)" placeholder="Cari alat, ruang, SN, merk..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+              <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b text-xs">
+                <tr>
+                  <th class="p-3">NAMA ALAT</th>
+                  <th class="p-3">RUANGAN / UNIT</th>
+                  <th class="p-3">NO SN</th>
+                  <th class="p-3">MERK</th>
+                  <th class="p-3">TYPE</th>
+                  <th class="p-3">STATUS</th>
+                  <th class="p-3">TAHUN</th>
+                  <th class="p-3">KONDISI</th>
+                  <th class="p-3 text-center">QR CODE</th>
+                  <th class="p-3 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTable" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SECTION PENGECEKAN ALAT ================= -->
+      <div id="section-pengecekan" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center space-x-2 border-b pb-3">
+            <i class="fa-solid fa-clipboard-check text-blue-600"></i>
+            <span>Formulir Pengecekan Fisik Alat</span>
+          </h3>
+
+          <form id="pengecekanForm" onsubmit="savePengecekan(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Pilih Nama Alat</label>
+                <select id="cekAlkes" onchange="autoFillSN()" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nomor Seri (SN)</label>
+                <input type="text" id="cekSN" readonly required placeholder="Otomatis terisi..." class="w-full p-2.5 border bg-slate-100 text-slate-600 rounded-xl outline-none text-sm cursor-not-allowed">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tanggal & Waktu Pengecekan</label>
+                <input type="datetime-local" id="cekWaktu" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Hasil Pengecekan Fisik</label>
+                <select id="cekFisik" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                  <option value="Baik / Normal">Baik / Normal</option>
+                  <option value="Perlu Perbaikan">Perlu Perbaikan</option>
+                  <option value="Rusak / Tidak Layak">Rusak / Tidak Layak</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nama Petugas Pemeriksa</label>
+                <input type="text" id="cekPetugas" required placeholder="Contoh: Ahmad Subagja" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Catatan / Keterangan (Opsional)</label>
+                <input type="text" id="cekCatatan" placeholder="Contoh: Kabel agak terkelupas, butuh pembersihan, dll." class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+              </div>
+
+              <div class="pt-2 flex justify-end">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-xl shadow-md transition flex items-center space-x-2">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  <span>Simpan Hasil Pengecekan</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="bg-slate-800 p-4 flex flex-wrap justify-between items-center gap-3 text-white">
+            <div class="flex items-center space-x-2 font-semibold">
+              <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+              <span>Riwayat Pengecekan Fisik Alat - RSUD Kepulauan Seribu</span>
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="copyTableText('pengecekan')" class="bg-white text-slate-700 hover:bg-slate-100 font-medium px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1">
+                <i class="fa-regular fa-copy"></i>
+                <span>Salin Teks</span>
+              </button>
+              <button onclick="exportToCSV('pengecekan')" class="bg-amber-500 hover:bg-amber-600 text-white font-medium px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Ekspor CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 border-b bg-slate-50 flex items-center justify-between">
+            <div class="relative w-80">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+              <input type="text" onkeyup="filterData('pengecekanTable', this.value)" placeholder="Cari tanggal, alat, SN, catatan..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+              <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b text-xs">
+                <tr>
+                  <th class="p-3">TANGGAL & WAKTU</th>
+                  <th class="p-3">NAMA ALAT</th>
+                  <th class="p-3">NO SN</th>
+                  <th class="p-3">PENGECEKAN FISIK</th>
+                  <th class="p-3">NAMA PETUGAS</th>
+                  <th class="p-3">CATATAN</th>
+                  <th class="p-3 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="pengecekanTable" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SECTION SERAH TERIMA ================= -->
+      <div id="section-serahterima" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center space-x-2 border-b pb-3">
+            <i class="fa-solid fa-file-signature text-blue-600"></i>
+            <span>Formulir Serah Terima Alat</span>
+          </h3>
+
+          <form id="serahTerimaForm" onsubmit="saveSerahTerima(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nama Penerima / Penanggung Jawab</label>
+                <input type="text" id="stNama" required placeholder="Contoh: Budi Santoso" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Unit / Departemen / Ruangan</label>
+                <input type="text" id="stUnit" required placeholder="Contoh: Unit IGD / Poliklinik" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Pilih Nama Alkes / Alat</label>
+                <select id="stAlkes" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </select>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <label class="block text-xs font-bold text-slate-700 uppercase">Tanda Tangan Elektronik</label>
+                <button type="button" onclick="clearSignature()" class="text-xs text-rose-600 hover:underline font-semibold">
+                  <i class="fa-solid fa-eraser"></i> Hapus Signature
+                </button>
+              </div>
+
+              <div class="border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 relative overflow-hidden h-44" id="canvas-container">
+                <canvas id="signatureCanvas" class="w-full h-full cursor-crosshair"></canvas>
+                <span class="absolute bottom-2 right-3 text-[10px] text-slate-400 pointer-events-none">Goreskan tanda tangan di box ini</span>
+              </div>
+
+              <div class="pt-2 flex justify-end">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-xl shadow-md transition flex items-center space-x-2">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  <span>Simpan Serah Terima</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="bg-slate-800 p-4 flex flex-wrap justify-between items-center gap-3 text-white">
+            <div class="flex items-center space-x-2 font-semibold">
+              <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+              <span>Riwayat Serah Terima Alat - RSUD Kepulauan Seribu</span>
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="copyTableText('serahterima')" class="bg-white text-slate-700 hover:bg-slate-100 font-medium px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1">
+                <i class="fa-regular fa-copy"></i>
+                <span>Salin Teks</span>
+              </button>
+              <button onclick="exportToCSV('serahterima')" class="bg-amber-500 hover:bg-amber-600 text-white font-medium px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Ekspor CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 border-b bg-slate-50 flex items-center justify-between">
+            <div class="relative w-80">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+              <input type="text" onkeyup="filterData('stTable', this.value)" placeholder="Cari penerima, unit, alkes..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+              <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b text-xs">
+                <tr>
+                  <th class="p-3">TANGGAL</th>
+                  <th class="p-3">NAMA PENERIMA</th>
+                  <th class="p-3">UNIT / DEPARTEMEN</th>
+                  <th class="p-3">NAMA ALKES</th>
+                  <th class="p-3 text-center">Tanda Tangan</th>
+                  <th class="p-3 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="stTable" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL INPUT ALAT -->
+  <div id="itemModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden">
+      <div class="bg-blue-600 text-white p-5 flex justify-between items-center">
+        <h3 class="font-bold text-lg flex items-center space-x-2">
+          <i class="fa-solid fa-plus-circle"></i>
+          <span>Tambah Data Alat</span>
+        </h3>
+        <button onclick="closeModal()" class="text-white hover:text-slate-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <form id="itemForm" onsubmit="saveItem(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">NAMA ALAT</label>
+          <input type="text" id="inputNama" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">RUANGAN / UNIT</label>
+          <input type="text" id="inputRuangan" placeholder="Contoh: Ruang IGD, Poliklinik, Rawat Inap" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">NO SN</label>
+            <input type="text" id="inputSN" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">MERK</label>
+            <input type="text" id="inputMerk" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">TYPE</label>
+            <input type="text" id="inputType" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">TAHUN</label>
+            <input type="number" id="inputTahun" value="2026" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">STATUS</label>
+            <select id="inputStatus" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+              <option value="Aktif">Aktif</option>
+              <option value="Non-Aktif">Non-Aktif</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">KONDISI</label>
+            <select id="inputKondisi" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+              <option value="Baik">Baik</option>
+              <option value="Rusak Ringan">Rusak Ringan</option>
+              <option value="Rusak Berat">Rusak Berat</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-2 pt-4 border-t">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-xl text-slate-600 hover:bg-slate-100 font-medium">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium shadow-md">Simpan Alat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL PEMINDAI / SCANNER KAMERA REAL-TIME -->
+  <div id="scanModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col">
+      <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
+        <h3 class="font-bold text-md flex items-center space-x-2">
+          <i class="fa-solid fa-qrcode text-amber-400"></i>
+          <span>Pemindai QR / Barcode Kamera</span>
+        </h3>
+        <button onclick="closeScanModal()" class="text-white hover:text-slate-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      
+      <div class="p-4 space-y-3">
+        <p class="text-xs text-slate-500 text-center">Arahkan kamera ke QR Code / Barcode yang ada pada alat.</p>
+        <div id="reader" class="w-full rounded-xl overflow-hidden bg-black min-h-[250px]"></div>
+      </div>
+
+      <div class="p-4 border-t bg-slate-50 flex justify-end">
+        <button type="button" onclick="closeScanModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-sm font-semibold transition">Tutup Kamera</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // ================= INITIAL DATA =================
+    let defaultData = [
+      { id: 1, nama: "Komputer Workstation", ruangan: "Ruang SIMRS", sn: "12345", merk: "Acer", type: "Veriton", status: "Aktif", tahun: 2026, kondisi: "Baik" },
+      { id: 2, nama: "Monitor LED 24 Inch", ruangan: "Pendaftaran / Loket", sn: "12346", merk: "LG", type: "24MK600", status: "Aktif", tahun: 2026, kondisi: "Baik" },
+      { id: 3, nama: "Glukometer / Stick Gula", ruangan: "IGD", sn: "12347", merk: "Accu-Chek", type: "Instant", status: "Aktif", tahun: 2026, kondisi: "Baik" }
+    ];
+
+    let items = JSON.parse(localStorage.getItem('alkes_data_v8')) || defaultData;
+    let serahTerimaList = JSON.parse(localStorage.getItem('alkes_st_v2')) || [];
+    let pengecekanList = JSON.parse(localStorage.getItem('alkes_cek_v2')) || [];
+    let kondisiChart = null;
+    let statusChart = null;
+    let isSigned = false;
+    let html5QrcodeScanner = null;
+
+    // ================= CANVAS SIGNATURE =================
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    let isDrawing = false;
+
+    function resizeCanvas() {
+      if (!canvas) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      if (ctx) {
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#0f172a';
+      }
+    }
+
+    function initCanvasEvents() {
+      if (!canvas) return;
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseleave', stopDrawing);
+
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousedown', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+      });
+
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousemove', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+      });
+
+      canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      isSigned = true;
+      const rect = canvas.getBoundingClientRect();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+    }
+
+    function stopDrawing() { isDrawing = false; }
+
+    function clearSignature() {
+      if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      isSigned = false;
+    }
+
+    // ================= SCANNER QR CODE / BARCODE LOGIC =================
+    function openScanModal() {
+      document.getElementById('scanModal').classList.remove('hidden');
+      document.getElementById('scanModal').classList.add('flex');
+
+      if (!html5QrcodeScanner) {
+        html5QrcodeScanner = new Html5QrcodeScanner(
+          "reader", 
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          /* verbose= */ false
+        );
+      }
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    }
+
+    function closeScanModal() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear().catch(error => console.error("Gagal menghentikan scanner.", error));
+      }
+      document.getElementById('scanModal').classList.add('hidden');
+      document.getElementById('scanModal').classList.remove('flex');
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      closeScanModal();
+
+      // Pindah ke tab Daftar Alat & otomatis cari data berdasarkan hasil scan
+      switchTab('daftar');
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        // Ambil baris pertama jika berupa multi-line teks
+        let searchText = decodedText.split('\n')[0].replace('NAMA: ', '').trim();
+        searchInput.value = searchText;
+        filterData('inventoryTable', searchText);
+      }
+
+      alert("QR/Barcode Terbaca:\n" + decodedText);
+    }
+
+    function onScanFailure(error) {
+      // Abaikan log error berkala saat tidak mendeteksi kode
+    }
+
+    // ================= DATA PERSISTENCE & RENDERING =================
+    function saveData() {
+      localStorage.setItem('alkes_data_v8', JSON.stringify(items));
+      renderTable();
+      updateDashboard();
+      populateDropdowns();
+    }
+
+    function saveSerahTerimaData() {
+      localStorage.setItem('alkes_st_v2', JSON.stringify(serahTerimaList));
+      renderSerahTerimaTable();
+      updateDashboard();
+    }
+
+    function savePengecekanData() {
+      localStorage.setItem('alkes_cek_v2', JSON.stringify(pengecekanList));
+      renderPengecekanTable();
+      updateDashboard();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('inventoryTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      items.forEach((item, index) => {
+        let badgeStatus = item.status === 'Aktif' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300';
+        let qrContent = `NAMA: ${item.nama}\nRUANG: ${item.ruangan || '-'}\nSN: ${item.sn}\nMERK: ${item.merk}\nTYPE: ${item.type}\nSTATUS: ${item.status}\nKONDISI: ${item.kondisi}`;
+
+        let tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="p-3 font-semibold text-slate-800">${item.nama}</td>
+          <td class="p-3 text-slate-600 font-medium">${item.ruangan || '-'}</td>
+          <td class="p-3 text-slate-600">${item.sn}</td>
+          <td class="p-3 text-slate-600">${item.merk}</td>
+          <td class="p-3 text-slate-600">${item.type}</td>
+          <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeStatus}">${item.status}</span></td>
+          <td class="p-3 text-slate-600">${item.tahun}</td>
+          <td class="p-3 text-slate-600">${item.kondisi}</td>
+          <td class="p-3 text-center">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrContent)}" class="w-10 h-10 mx-auto rounded border p-0.5" alt="QR">
+          </td>
+          <td class="p-3 text-center"><button onclick="deleteItem(${index})" class="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition"><i class="fa-solid fa-trash"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function populateDropdowns() {
+      const selectST = document.getElementById('stAlkes');
+      const selectCek = document.getElementById('cekAlkes');
+
+      if (selectST) {
+        selectST.innerHTML = '<option value="">-- Pilih Alat / Alkes --</option>';
+        items.forEach(i => {
+          let optST = document.createElement('option');
+          optST.value = i.nama + ' (SN: ' + i.sn + ')';
+          optST.innerText = i.nama + ' - ' + i.merk + ' (' + i.sn + ')';
+          selectST.appendChild(optST);
+        });
+      }
+
+      if (selectCek) {
+        selectCek.innerHTML = '<option value="">-- Pilih Alat --</option>';
+        items.forEach(i => {
+          let optCek = document.createElement('option');
+          optCek.value = i.id;
+          optCek.innerText = i.nama + ' - ' + i.merk;
+          selectCek.appendChild(optCek);
+        });
+      }
+    }
+
+    function autoFillSN() {
+      const selectedId = document.getElementById('cekAlkes').value;
+      const inputSN = document.getElementById('cekSN');
+      const selectedItem = items.find(i => i.id == selectedId);
+      inputSN.value = selectedItem ? selectedItem.sn : '';
+    }
+
+    function renderSerahTerimaTable() {
+      const tbody = document.getElementById('stTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (serahTerimaList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 font-medium">Belum ada riwayat serah terima</td></tr>`;
+        return;
+      }
+
+      serahTerimaList.forEach((st, idx) => {
+        let tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="p-3 text-xs text-slate-500">${st.tanggal}</td>
+          <td class="p-3 font-semibold text-slate-800">${st.nama}</td>
+          <td class="p-3 text-slate-600">${st.unit}</td>
+          <td class="p-3 text-slate-600">${st.alkes}</td>
+          <td class="p-3 text-center"><img src="${st.signature}" class="h-10 mx-auto border bg-white rounded p-0.5" alt="TTD"></td>
+          <td class="p-3 text-center">
+            <button onclick="deleteST(${idx})" class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderPengecekanTable() {
+      const tbody = document.getElementById('pengecekanTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (pengecekanList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400 font-medium">Belum ada riwayat pengecekan fisik</td></tr>`;
+        return;
+      }
+
+      pengecekanList.forEach((cek, idx) => {
+        let tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 border-b border-slate-100";
+        
+        let badgeKondisi = cek.fisik === 'Baik / Normal' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-800 border-amber-300';
+
+        tr.innerHTML = `
+          <td class="p-3 text-xs text-slate-500">${cek.waktu}</td>
+          <td class="p-3 font-semibold text-slate-800">${cek.namaAlat}</td>
+          <td class="p-3 text-slate-600">${cek.sn}</td>
+          <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeKondisi}">${cek.fisik}</span></td>
+          <td class="p-3 text-slate-600">${cek.petugas}</td>
+          <td class="p-3 text-slate-600 italic">${cek.catatan || '-'}</td>
+          <td class="p-3 text-center">
+            <button onclick="deletePengecekan(${idx})" class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ================= ACTIONS & EVENT HANDLERS =================
+    function saveItem(e) {
+      e.preventDefault();
+      const newItem = {
+        id: Date.now(),
+        nama: document.getElementById('inputNama').value,
+        ruangan: document.getElementById('inputRuangan').value,
+        sn: document.getElementById('inputSN').value,
+        merk: document.getElementById('inputMerk').value,
+        type: document.getElementById('inputType').value,
+        tahun: document.getElementById('inputTahun').value,
+        status: document.getElementById('inputStatus').value,
+        kondisi: document.getElementById('inputKondisi').value
+      };
+
+      items.push(newItem);
+      saveData();
+      closeModal();
+      document.getElementById('itemForm').reset();
+    }
+
+    function deleteItem(index) {
+      if (confirm('Apakah Anda yakin ingin menghapus data alat ini?')) {
+        items.splice(index, 1);
+        saveData();
+      }
+    }
+
+    function saveSerahTerima(e) {
+      e.preventDefault();
+      if (!isSigned) {
+        alert('Harap masukkan tanda tangan elektronik terlebih dahulu.');
+        return;
+      }
+
+      const stData = {
+        tanggal: new Date().toLocaleString('id-ID'),
+        nama: document.getElementById('stNama').value,
+        unit: document.getElementById('stUnit').value,
+        alkes: document.getElementById('stAlkes').value,
+        signature: canvas.toDataURL()
+      };
+
+      serahTerimaList.unshift(stData);
+      saveSerahTerimaData();
+      document.getElementById('serahTerimaForm').reset();
+      clearSignature();
+      alert('Data serah terima berhasil disimpan.');
+    }
+
+    function deleteST(index) {
+      if (confirm('Hapus riwayat serah terima ini?')) {
+        serahTerimaList.splice(index, 1);
+        saveSerahTerimaData();
+      }
+    }
+
+    function savePengecekan(e) {
+      e.preventDefault();
+      const selectAlkes = document.getElementById('cekAlkes');
+      const selectedText = selectAlkes.options[selectAlkes.selectedIndex].text;
+
+      const cekData = {
+        waktu: new Date(document.getElementById('cekWaktu').value).toLocaleString('id-ID'),
+        namaAlat: selectedText,
+        sn: document.getElementById('cekSN').value,
+        fisik: document.getElementById('cekFisik').value,
+        petugas: document.getElementById('cekPetugas').value,
+        catatan: document.getElementById('cekCatatan').value
+      };
+
+      pengecekanList.unshift(cekData);
+      savePengecekanData();
+      document.getElementById('pengecekanForm').reset();
+      alert('Hasil pengecekan fisik berhasil disimpan.');
+    }
+
+    function deletePengecekan(index) {
+      if (confirm('Hapus data pengecekan ini?')) {
+        pengecekanList.splice(index, 1);
+        savePengecekanData();
+      }
+    }
+
+    // ================= TABS & MODAL NAVIGATION =================
+    function switchTab(tab) {
+      const tabs = ['dashboard', 'daftar', 'pengecekan', 'serahterima'];
+      tabs.forEach(t => {
+        const sec = document.getElementById(`section-${t}`);
+        const btn = document.getElementById(`btn-${t}`);
+        if (sec) sec.classList.add('hidden');
+        if (btn) {
+          btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+          btn.classList.add('text-slate-400');
+        }
+      });
+
+      const activeSec = document.getElementById(`section-${tab}`);
+      const activeBtn = document.getElementById(`btn-${tab}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+        activeBtn.classList.remove('text-slate-400');
+      }
+
+      const titleEl = document.getElementById('page-title');
+      const subTitleEl = document.getElementById('page-subtitle');
+      const btnAction = document.getElementById('btn-header-action');
+
+      if (tab === 'dashboard') {
+        titleEl.innerText = "Dashboard Utama";
+        subTitleEl.innerText = "Overview status dan statistik inventaris alat RSUD Kepulauan Seribu";
+        btnAction.classList.add('hidden');
+      } else if (tab === 'daftar') {
+        titleEl.innerText = "Daftar Alat Inventaris";
+        subTitleEl.innerText = "Kelola seluruh data alat medis dan non-medis yang terdaftar";
+        btnAction.classList.remove('hidden');
+      } else if (tab === 'pengecekan') {
+        titleEl.innerText = "Pengecekan Fisik Alat";
+        subTitleEl.innerText = "Pencatatan dan riwayat inspeksi berkala alat";
+        btnAction.classList.add('hidden');
+      } else if (tab === 'serahterima') {
+        titleEl.innerText = "Serah Terima Alat";
+        subTitleEl.innerText = "Formulir dan log mutasi / penyerahan unit alat";
+        btnAction.classList.add('hidden');
+        setTimeout(resizeCanvas, 100);
+      }
+    }
+
+    function openModal() {
+      document.getElementById('itemModal').classList.remove('hidden');
+      document.getElementById('itemModal').classList.add('flex');
+    }
+
+    function closeModal() {
+      document.getElementById('itemModal').classList.add('hidden');
+      document.getElementById('itemModal').classList.remove('flex');
+    }
+
+    // ================= DASHBOARD & CHARTS =================
+    function updateDashboard() {
+      document.getElementById('dash-total').innerText = items.length;
+      document.getElementById('dash-aktif').innerText = items.filter(i => i.status === 'Aktif').length;
+      document.getElementById('dash-baik').innerText = items.filter(i => i.kondisi === 'Baik').length;
+      document.getElementById('dash-cek-count').innerText = pengecekanList.length;
+
+      renderCharts();
+    }
+
+    function renderCharts() {
+      const kondisiCounts = {
+        Baik: items.filter(i => i.kondisi === 'Baik').length,
+        'Rusak Ringan': items.filter(i => i.kondisi === 'Rusak Ringan').length,
+        'Rusak Berat': items.filter(i => i.kondisi === 'Rusak Berat').length
+      };
+
+      const statusCounts = {
+        Aktif: items.filter(i => i.status === 'Aktif').length,
+        'Non-Aktif': items.filter(i => i.status === 'Non-Aktif').length
+      };
+
+      if (kondisiChart) kondisiChart.destroy();
+      if (statusChart) statusChart.destroy();
+
+      const ctxKondisi = document.getElementById('kondisiChart').getContext('2d');
+      kondisiChart = new Chart(ctxKondisi, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(kondisiCounts),
+          datasets: [{
+            label: 'Jumlah Alat',
+            data: Object.values(kondisiCounts),
+            backgroundColor: ['#2563eb', '#f59e0b', '#ef4444'],
+            borderRadius: 8
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      const ctxStatus = document.getElementById('statusChart').getContext('2d');
+      statusChart = new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(statusCounts),
+          datasets: [{
+            data: Object.values(statusCounts),
+            backgroundColor: ['#10b981', '#f43f5e']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // ================= UTILITIES: SEARCH & EXPORT =================
+    function filterData(tableId, query) {
+      const rows = document.querySelectorAll(`#${tableId} tr`);
+      const q = query.toLowerCase();
+      rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+
+    function exportToCSV(type) {
+      let csv = [];
+      let filename = `${type}_export.csv`;
+
+      if (type === 'inventory') {
+        csv.push(["NAMA ALAT", "RUANGAN", "NO SN", "MERK", "TYPE", "STATUS", "TAHUN", "KONDISI"].join(","));
+        items.forEach(i => csv.push([`"${i.nama}"`, `"${i.ruangan || ''}"`, `"${i.sn}"`, `"${i.merk}"`, `"${i.type}"`, `"${i.status}"`, `"${i.tahun}"`, `"${i.kondisi}"`].join(",")));
+      } else if (type === 'pengecekan') {
+        csv.push(["TANGGAL & WAKTU", "NAMA ALAT", "NO SN", "PENGECEKAN FISIK", "NAMA PETUGAS", "CATATAN"].join(","));
+        pengecekanList.forEach(c => csv.push([`"${c.waktu}"`, `"${c.namaAlat}"`, `"${c.sn}"`, `"${c.fisik}"`, `"${c.petugas}"`, `"${c.catatan || ''}"`].join(",")));
+      } else if (type === 'serahterima') {
+        csv.push(["TANGGAL", "NAMA PENERIMA", "UNIT / DEPARTEMEN", "NAMA ALKES"].join(","));
+        serahTerimaList.forEach(s => csv.push([`"${s.tanggal}"`, `"${s.nama}"`, `"${s.unit}"`, `"${s.alkes}"`].join(",")));
+      }
+
+      const blob = new Blob(["\uFEFF" + csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+
+    function copyTableText(type) {
+      let lines = [];
+
+      if (type === 'inventory') {
+        lines.push(["NAMA ALAT", "RUANGAN", "NO SN", "MERK", "TYPE", "STATUS", "TAHUN", "KONDISI"].join("\t"));
+        items.forEach(i => {
+          lines.push([i.nama, i.ruangan || '', i.sn, i.merk, i.type, i.status, i.tahun, i.kondisi].join("\t"));
+        });
+      } else if (type === 'pengecekan') {
+        lines.push(["TANGGAL & WAKTU", "NAMA ALAT", "NO SN", "PENGECEKAN FISIK", "NAMA PETUGAS", "CATATAN"].join("\t"));
+        pengecekanList.forEach(c => {
+          lines.push([c.waktu, c.namaAlat, c.sn, c.fisik, c.petugas, c.catatan || ''].join("\t"));
+        });
+      } else if (type === 'serahterima') {
+        lines.push(["TANGGAL", "NAMA PENERIMA", "UNIT / DEPARTEMEN", "NAMA ALKES"].join("\t"));
+        serahTerimaList.forEach(s => {
+          lines.push([s.tanggal, s.nama, s.unit, s.alkes].join("\t"));
+        });
+      }
+
+      const resultText = lines.join("\n");
+
+      navigator.clipboard.writeText(resultText).then(() => {
+        alert("Data berhasil disalin! Silahkan Paste (Ctrl+V) langsung di Excel atau Google Sheets.");
+      }).catch(err => {
+        alert("Gagal menyalin data: " + err);
+      });
+    }
+
+    // ================= APP INITIALIZATION =================
+    window.addEventListener('DOMContentLoaded', () => {
+      initCanvasEvents();
+      renderTable();
+      renderSerahTerimaTable();
+      renderPengecekanTable();
+      populateDropdowns();
+      updateDashboard();
+
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      const dateInput = document.getElementById('cekWaktu');
+      if (dateInput) dateInput.value = now.toISOString().slice(0, 16);
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+  </script>
+</body>
+</html>
